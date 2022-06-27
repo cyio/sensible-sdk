@@ -34,10 +34,21 @@ type SensibleQueryUtxo = {
   vout?: number;
   metaTxId?: string;
   metaOutputIndex?: number;
+  tx_hash?: string;
+  tx_pos?: number;
+  value?: number;
 };
+
+type extendObj = {
+  useWOC?: boolean
+}
 export class Sensible implements SensibleApiBase {
   serverBase: string;
-  constructor(apiTarget: API_TARGET, apiNet: API_NET, serverBase?: string) {
+  apiNetType: string;
+  useWOC: boolean;
+  constructor(apiTarget: API_TARGET, apiNet: API_NET, serverBase?: string, extend?: extendObj) {
+    this.apiNetType = apiNet;
+    this.useWOC = extend?.useWOC || false;
     if (apiTarget == API_TARGET.SENSIBLE) {
       if (apiNet == API_NET.MAIN) {
         this.serverBase = "https://api.sensiblequery.com";
@@ -71,6 +82,18 @@ export class Sensible implements SensibleApiBase {
       address: string;
     }[]
   > {
+    if (this.useWOC) {
+      let url = `https://api.whatsonchain.com/v1/bsv/${this.apiNetType === API_NET.TEST ? 'test' : 'main'}/address/${address}/unspent`;
+      let _res = await Net.httpGet(url, {});
+      const data = _res as any;
+      let ret = data.map((v: SensibleQueryUtxo) => ({
+        txId: v.tx_hash,
+        outputIndex: v.tx_pos,
+        satoshis: v.value,
+        address: address,
+      }));
+      return ret;
+    }
     let url = `${this.serverBase}/address/${address}/utxo?size=100`;
     let _res = await Net.httpGet(url, {});
     const { code, data, msg } = _res as ResData;
@@ -105,6 +128,14 @@ export class Sensible implements SensibleApiBase {
       );
       return _res.txid;
     } else {
+      if (this.useWOC) {
+        const url = `https://api.whatsonchain.com/v1/bsv/${this.apiNetType === API_NET.TEST ? 'test' : 'main'}/tx/raw`
+        let _res = await Net.httpPost(url, {
+          txhex: txHex,
+        });
+        const data = _res as any;
+        return data;
+      }
       let url = `${this.serverBase}/pushtx`;
       let _res = await Net.httpPost(url, {
         txHex,

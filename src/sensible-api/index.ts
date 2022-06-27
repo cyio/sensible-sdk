@@ -153,7 +153,8 @@ export class SensibleApi implements SensibleApiBase {
   constructor(
     apiNet: API_NET,
     apiTarget: API_TARGET = API_TARGET.SENSIBLE,
-    serverBase?: string
+    serverBase?: string,
+    extend?: object
   ) {
     switch (apiTarget) {
       case API_TARGET.METASV: {
@@ -161,7 +162,7 @@ export class SensibleApi implements SensibleApiBase {
         break;
       }
       default: {
-        this.apiHandler = new Sensible(apiTarget, apiNet, serverBase);
+        this.apiHandler = new Sensible(apiTarget, apiNet, serverBase, extend);
         break;
       }
     }
