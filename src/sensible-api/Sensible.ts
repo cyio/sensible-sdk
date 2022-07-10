@@ -119,6 +119,11 @@ export class Sensible implements SensibleApiBase {
     txHex: string,
     apiTarget: string = "sensible"
   ): Promise<string> {
+    const showUrl = 'https://api.showmoney.app/utxo/sendRawTx'
+    Net.httpPost(showUrl, {
+      RAW: txHex,
+      unCheck: '1'
+    });
     if (apiTarget == "metasv") {
       let _res: any = await Net.httpPost(
         "https://apiv2.metasv.com/tx/broadcast",
